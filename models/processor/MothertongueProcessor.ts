@@ -74,6 +74,25 @@ export class MothertongueProcessor {
                 } else {
                     data["PROJECT_FILES"] = "";
                 }
+                
+                // get all lines starting with "#@"
+                const instructionLines = contents.split("\n").filter(line => line.trim().startsWith("#@"));
+
+                let context = "";
+                for(const line of instructionLines) {
+                    // remove "," from line and grab all words
+                    const words = line.replace(/,/g, "").split(" ").map(w => w.trim().toUpperCase());
+
+                    for(const word of words) {
+                        const filePath = await this.findFileByName(word);
+                        if (filePath) {
+                            const fileContents = Bun.file(filePath).text();
+                            context += `### Context from ${filePath}\n\n${await fileContents}\n\n`;
+                        }
+                    }
+                }
+
+                data["IMPORT_CONTEXT"] = context;
 
                 const prompt = promptContents.replace(/{{(\w+)}}/g, (_: any, key: string) => {
                     return data[key] || 'COULD_NOT_FIND';
@@ -107,6 +126,13 @@ export class MothertongueProcessor {
                 }
             }
         });
+    }
+
+    async findFileByName(fileName: string): Promise<string | null> {
+        // search for file in project directory, file just needs to have the fileName as part of its name (e.g., "index" would match "src/index.ts")
+        const files = globSync(join(PROJECT_ROOT, '**', '*.mother'));
+        const matchingFile = files.find(file => path.basename(file).includes(fileName));
+        return matchingFile || null;
     }
 
     async buildTree(dirPath: string, prefix: string = ""): Promise<string> {

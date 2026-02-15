@@ -15,6 +15,8 @@ This file:
 
 {{PROJECT_DIR}}
 
+{{IMPORT_CONTEXT}}
+
 {{USER_INSTRUCTIONS}}
 
 # Contents
