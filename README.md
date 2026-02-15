@@ -7,6 +7,9 @@ A new take on AI-assisted programming in which you can write natural language an
 
 Simply run: `mothertongue .` in your project root and it'll do its magic.
 
+**Note:**
+Right now only Gemini is supported out-of-the-box. Set the following environment variable: `GEMINI_TOKEN` to a working AI Studio API Key to use `mothertongue`.
+
 ## Workflow
 
 Let's consider a scenario where I have the following directory structure:
