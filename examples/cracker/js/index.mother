@@ -1,0 +1,18 @@
+#!js
+#; ensure this is documented in a professional manner
+#; use import not require
+
+x = console args
+target_path = -t arg
+wordlist_path = -l arg
+alg = -a arg
+debug = -d arg
+
+#; enum
+supported_algs = md5 (0), sha1(1)
+
+if either don't exist, error
+
+#; dont create new, verify the hash directly
+crypto verify all words in wordlist with target using alg
+when looping, print all hashes alongside if debugging

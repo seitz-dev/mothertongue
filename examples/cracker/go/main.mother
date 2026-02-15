@@ -1,0 +1,19 @@
+#!go
+#; ensure this is documented in a professional manner
+#; cross platform 
+
+x = console args
+target_path = -t arg #; path to file w target
+wordlist_path = -l arg
+alg = -a arg
+debug = -d arg
+
+#; enum
+supported_algs = md5 (0), sha1(1) hex
+
+if either don't exist, error
+
+#; dont create new, verify the hash directly
+verify all words in wordlist against target using alg
+when looping, print all hashes alongside if debugging
+if found, say it was found, otherwise say it wasnt

@@ -1,0 +1,9 @@
+#! py
+
+#@ type job
+
+public person {
+    job
+    name
+    age
+}

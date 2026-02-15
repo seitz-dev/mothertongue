@@ -10,6 +10,10 @@
     "typescript": "^5"
   },
   "dependencies": {
-    "@google/genai": "^1.41.0"
+    "@google/genai": "^1.41.0",
+    "@types/async-lock": "^1.4.2",
+    "async-lock": "^1.4.1",
+    "zod": "^4.3.6",
+    "zod-to-json-schema": "^3.25.1"
   }
 }
