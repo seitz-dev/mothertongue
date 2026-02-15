@@ -18,6 +18,14 @@ export class GeminiService implements AiService {
         this.client = new GoogleGenAI({
             apiKey: this.apiKey
         });
+
+        if(!this.options.model) {
+            this.options.model = "gemini-3-flash-preview";
+        }
+
+        if(!this.options.thinkingLevel) {
+            this.options.thinkingLevel = ThinkingLevel.LOW;
+        }
     }
 
     async generateMothertongueResponse(prompt: string, abortSignal: AbortSignal): Promise<MothertongueResponse> {
@@ -31,15 +39,24 @@ export class GeminiService implements AiService {
     }
 
     async generateResponse<T>(prompt: string, abortSignal: AbortSignal): Promise<T> {
+        this.logger.debug(`Sending prompt to Gemini API with thinking level ${this.options.thinkingLevel}... using model ${this.options.model}.`);
+        this.logger.debug(`Prompt: ${prompt}`);
+
         const stream = await this.client.models.generateContentStream({
             model: this.options.model || "gemini-3-flash-preview",
             contents: prompt,
             config: {
+                candidateCount: 1,
+                temperature: 0.2,
                 responseMimeType: "application/json",
                 responseJsonSchema: z.toJSONSchema(motherTongueResponseSchema),
                 thinkingConfig: {
                     thinkingLevel: this.options.thinkingLevel
-                }
+                },
+                tools: [
+                    { googleSearch: {}}
+                ],
+                abortSignal: abortSignal
             },
         });
 

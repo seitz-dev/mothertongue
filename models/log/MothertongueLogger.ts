@@ -1,5 +1,7 @@
 export class MothertongueLogger {
-    
+
+    constructor(public doDebugMessages: boolean = false) { }
+
     err(message: string) {
         console.error(message);
     }
@@ -8,9 +10,17 @@ export class MothertongueLogger {
         console.log(message);
     }
 
+    debug(message: string) {
+        if (this.doDebugMessages) {
+            console.debug(message);
+        }
+    }
+
     logClear(message: string) {
-        console.clear();
+        if (!this.doDebugMessages) {
+            console.clear();
+        }
         console.log(message);
     }
-    
+
 }

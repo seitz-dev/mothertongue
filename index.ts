@@ -6,6 +6,7 @@ import { WatcherService } from './models/watcher/WatcherService';
 import { MothertongueLogger } from './models/log/MothertongueLogger';
 import { parseArgs } from "node:util";
 import { ThinkingLevel } from "@google/genai";
+import { watch } from "node:fs";
 
 export let PROJECT_ROOT = "";
 export let USER_INSTRUCTIONS: string | undefined = undefined;
@@ -16,6 +17,7 @@ export const { values: programOptions, positionals } = parseArgs({
         thinking: { type: "string", short: "t" },
         model: { type: "string", short: "m" },
         overrideSystemPrompt: { type: "string", short: "o" },
+        debug: { type: "boolean", short: "d" },
     },
     allowPositionals: true,
 })
@@ -23,7 +25,7 @@ export const { values: programOptions, positionals } = parseArgs({
 await initialize();
 async function initialize() {
     const filePath = positionals[0];
-    const logger = new MothertongueLogger();
+    const logger = new MothertongueLogger(programOptions.debug);
 
     if (!filePath) {
         logger.err("Please provide a file path to watch.");
@@ -37,9 +39,16 @@ async function initialize() {
     }
 
     // see if there is a mother_tongue.MD in the project root and if so, read it and set it as user instructions
-    const instructionsPath = path.join(PROJECT_ROOT, "mother_tongue.MD");
+    const instructionsPath = path.join(PROJECT_ROOT, "MOTHERTONGUE.MD");
     if (await Bun.file(instructionsPath).exists()) {
         USER_INSTRUCTIONS = await Bun.file(instructionsPath).text();
+
+        // set up a watcher on the instructions file to update USER_INSTRUCTIONS if it changes
+        const instructionsWatcher = watch(instructionsPath);
+        instructionsWatcher.on("change", async () => {
+            logger.debug("MOTHERTONGUE.MD file changed, updating user instructions...");
+            USER_INSTRUCTIONS = await Bun.file(instructionsPath).text();
+        });
     }
 
     // -thinking HIGH, switch return
@@ -70,4 +79,3 @@ async function initialize() {
 
     await watcher.startWatching(filePath);
 }
-

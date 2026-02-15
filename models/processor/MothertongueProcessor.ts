@@ -95,13 +95,16 @@ export class MothertongueProcessor {
                 data["IMPORT_CONTEXT"] = context;
 
                 const prompt = promptContents.replace(/{{(\w+)}}/g, (_: any, key: string) => {
-                    return data[key] || 'COULD_NOT_FIND';
+                    return data[key] || '';
                 });
+
+                // remove double new lines from prompt
+                const cleanedPrompt = prompt.replace(/\n\s*\n/g, '\n\n');
 
                 let response: MothertongueResponse;
 
                 try {
-                    response = await this.ai.generateMothertongueResponse(prompt, controller.signal);
+                    response = await this.ai.generateMothertongueResponse(cleanedPrompt, controller.signal);
                 } catch (e: any) {
                     if (e.message === "AbortError") {
                         return;
