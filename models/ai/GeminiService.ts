@@ -1,17 +1,20 @@
-import { GenerateContentResponse, GoogleGenAI, ThinkingLevel } from "@google/genai";
+import { GoogleGenAI, ThinkingLevel } from "@google/genai";
 import type AiService from "./AiService";
 import { motherTongueResponseSchema, type MothertongueResponse } from './MothertongueResponse';
 import { AiResponseFormatter } from "./utils/AiResponseFormatter";
-import zodToJsonSchema from "zod-to-json-schema";
 import z from "zod";
 import { MothertongueLogger } from '../log/MothertongueLogger';
+import type { GeminiOptions } from "./GeminiOptions";
 
 export class GeminiService implements AiService {
     private client: GoogleGenAI;
     private logger: MothertongueLogger;
+    private options: GeminiOptions;
 
-    public constructor(private apiKey: string, logger: MothertongueLogger) {
+    public constructor(private apiKey: string, logger: MothertongueLogger, options?: GeminiOptions) {
         this.logger = logger;
+        this.options = options || { thinkingLevel: ThinkingLevel.LOW, model: "gemini-3-flash-preview" };
+
         this.client = new GoogleGenAI({
             apiKey: this.apiKey
         });
@@ -29,13 +32,13 @@ export class GeminiService implements AiService {
 
     async generateResponse<T>(prompt: string, abortSignal: AbortSignal): Promise<T> {
         const stream = await this.client.models.generateContentStream({
-            model: "gemini-3-flash-preview",
+            model: this.options.model || "gemini-3-flash-preview",
             contents: prompt,
             config: {
                 responseMimeType: "application/json",
                 responseJsonSchema: z.toJSONSchema(motherTongueResponseSchema),
                 thinkingConfig: {
-                    thinkingLevel: ThinkingLevel.LOW
+                    thinkingLevel: this.options.thinkingLevel
                 }
             },
         });
@@ -44,7 +47,7 @@ export class GeminiService implements AiService {
         let totalBytes = 0;
 
         for await (const part of stream) {
-            if(abortSignal.aborted) {
+            if (abortSignal.aborted) {
                 throw new Error("AbortError");
             }
 

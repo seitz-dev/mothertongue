@@ -4,12 +4,14 @@ import type AiService from '../ai/AiService';
 import AsyncLock from 'async-lock';
 import type { MothertongueResponse } from '../ai/MothertongueResponse';
 import { MothertongueLogger } from '../log/MothertongueLogger';
-import { PROJECT_ROOT } from '../..';
+import { programOptions, PROJECT_ROOT, USER_INSTRUCTIONS } from '../..';
 import { globSync } from 'node:fs';
 import { readdir } from 'node:fs/promises';
 import { stat } from 'node:fs/promises';
+import prompt from "../../prompt.md" with {type: "text"};
 
-const promptLocation = Bun.file("prompt.md");
+
+const promptLocation = prompt;
 
 export class MothertongueProcessor {
     private taskLock: AsyncLock;
@@ -47,12 +49,23 @@ export class MothertongueProcessor {
                 this.logger.logClear(`Processing: ${fileName}`);
 
                 const contents = await file.text();
-                const promptContents = await promptLocation.text();
+                let promptContents = await promptLocation;
 
                 const data: Record<string, string> = {
                     FILE_NAME: fileName,
                     FILE_CONTENT: contents
                 };
+
+                if (USER_INSTRUCTIONS) {
+                    data["USER_INSTRUCTIONS"] = "# User Instructions\n\n" + USER_INSTRUCTIONS;
+
+                    if (programOptions.overrideSystemPrompt) {
+                        promptContents = USER_INSTRUCTIONS;
+                    }
+
+                } else {
+                    data["USER_INSTRUCTIONS"] = "";
+                }
 
                 if (contents.includes("#@")) {
                     // build directory tree string for prompt
@@ -62,7 +75,7 @@ export class MothertongueProcessor {
                     data["PROJECT_FILES"] = "";
                 }
 
-                const prompt = promptContents.replace(/{{(\w+)}}/g, (match, key) => {
+                const prompt = promptContents.replace(/{{(\w+)}}/g, (_: any, key: string) => {
                     return data[key] || 'COULD_NOT_FIND';
                 });
 

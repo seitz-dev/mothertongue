@@ -15,5 +15,7 @@ This file:
 
 {{PROJECT_DIR}}
 
+{{USER_INSTRUCTIONS}}
+
 # Contents
 {{FILE_CONTENT}}
