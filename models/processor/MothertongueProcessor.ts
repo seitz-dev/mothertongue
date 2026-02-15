@@ -74,16 +74,16 @@ export class MothertongueProcessor {
                 } else {
                     data["PROJECT_FILES"] = "";
                 }
-                
+
                 // get all lines starting with "#@"
                 const instructionLines = contents.split("\n").filter(line => line.trim().startsWith("#@"));
 
                 let context = "";
-                for(const line of instructionLines) {
+                for (const line of instructionLines) {
                     // remove "," from line and grab all words
                     const words = line.replace(/,/g, "").split(" ").map(w => w.trim().toUpperCase());
 
-                    for(const word of words) {
+                    for (const word of words) {
                         const filePath = await this.findFileByName(word);
                         if (filePath) {
                             const fileContents = Bun.file(filePath).text();
@@ -130,7 +130,7 @@ export class MothertongueProcessor {
 
     async findFileByName(fileName: string): Promise<string | null> {
         // search for file in project directory, file just needs to have the fileName as part of its name (e.g., "index" would match "src/index.ts")
-        const files = globSync(join(PROJECT_ROOT, '**', '*.mother'));
+        const files = globSync(join(PROJECT_ROOT, '**', '*'));
         const matchingFile = files.find(file => path.basename(file).includes(fileName));
         return matchingFile || null;
     }
@@ -148,7 +148,17 @@ export class MothertongueProcessor {
 
         try {
             // Read directory contents
-            const items = await readdir(dirPath);
+            let items = await readdir(dirPath);
+
+            // ignore node_modules and .git folders
+            items = items.filter(item =>
+                item !== "node_modules" &&
+                item !== ".git" &&
+                item !== "dist" &&
+                item !== "build" &&
+                item !== "out" &&
+                item !== "target"
+            );
 
             // Filter out hidden files (optional: remove this filter to see .git, .env, etc.)
             const visibleItems = items.filter(item => !item.startsWith("."));
